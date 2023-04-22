@@ -10,6 +10,30 @@ from statistics import mean
 from tqdm import tqdm
 from torch.nn.functional import threshold, normalize
 
+# Exclude scans with zero or multiple bboxes (of the first 100)
+stamps_to_exclude = {
+    'stampDS-00008',
+    'stampDS-00010',
+    'stampDS-00015',
+    'stampDS-00021',
+    'stampDS-00027',
+    'stampDS-00031',
+    'stampDS-00039',
+    'stampDS-00041',
+    'stampDS-00049',
+    'stampDS-00053',
+    'stampDS-00059',
+    'stampDS-00069',
+    'stampDS-00073',
+    'stampDS-00080',
+    'stampDS-00090',
+    'stampDS-00098',
+    'stampDS-00100'
+}.union({
+    'stampDS-00012',
+    'stampDS-00013',
+    'stampDS-00014',
+}) # Exclude 3 scans that aren't the type of scan we want to be fine tuning for
 
 bbox_coords = {}
 for f in sorted(Path('ground-truth-maps/ground-truth-maps/').iterdir())[:100]:
