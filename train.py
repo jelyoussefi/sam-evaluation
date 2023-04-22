@@ -10,6 +10,39 @@ from statistics import mean
 from tqdm import tqdm
 from torch.nn.functional import threshold, normalize
 
+
+bbox_coords = {}
+for f in sorted(Path('ground-truth-maps/ground-truth-maps/').iterdir())[:100]:
+	k = f.stem[:-3]
+	if k not in stamps_to_exclude:
+		im = cv2.imread(f.as_posix())
+		gray=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+		contours, hierarchy = cv2.findContours(gray,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[-2:]
+		if len(contours) > 1:
+			x,y,w,h = cv2.boundingRect(contours[0])
+			height, width, _ = im.shape
+			bbox_coords[k] = np.array([x, y, x + w, y + h])
+
+ground_truth_masks = {}
+for k in bbox_coords.keys():
+	gt_grayscale = cv2.imread(f'ground-truth-pixel/ground-truth-pixel/{k}-px.png', cv2.IMREAD_GRAYSCALE)
+	ground_truth_masks[k] = (gt_grayscale == 0)
+	
+
+def show_mask(mask, ax, random_color=False):
+	if random_color:
+		color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
+	else:
+		color = np.array([30/255, 144/255, 255/255, 0.6])
+	h, w = mask.shape[-2:]
+	mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
+	ax.imshow(mask_image)
+    
+def show_box(box, ax):
+	x0, y0 = box[0], box[1]
+	w, h = box[2] - box[0], box[3] - box[1]
+	ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
+
 model_type = 'vit_b'
 checkpoint = 'sam_vit_b_01ec64.pth'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -93,4 +126,3 @@ for epoch in range(num_epochs):
 	print(f'Mean loss: {mean(epoch_losses)}')
 
 torch.save(sam_model.state_dict(), "./models/best.pth")
-
