@@ -70,7 +70,7 @@ def show_box(box, ax):
 model_type = 'vit_b'
 checkpoint = 'sam_vit_b_01ec64.pth'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	
+print("Using ", device)	
 sam_model = sam_model_registry[model_type](checkpoint=checkpoint)
 sam_model.to(device)
 sam_model.train();
